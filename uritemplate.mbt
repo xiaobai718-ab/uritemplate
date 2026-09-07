@@ -119,6 +119,11 @@ fn is_reserved(c : Char) -> Bool {
 }
 
 ///|
+fn is_hex_digit(c : Char) -> Bool {
+  (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+}
+
+///|
 fn hex_digit(value : Int) -> Char {
   match value {
     0 => '0'
@@ -172,12 +177,25 @@ fn append_utf8_encoded(out : Array[Char], c : Char) -> Unit {
 /// retained only for the `+` and `#` URI Template operators.
 pub fn encode(value : String, allow_reserved? : Bool = false) -> String {
   let out : Array[Char] = []
-  for c in value {
+  let chars : Array[Char] = value.to_array()
+  let mut index = 0
+  while index < chars.length() {
+    let c = chars[index]
     if is_unreserved(c) || (allow_reserved && is_reserved(c)) {
       out.push(c)
+    } else if allow_reserved &&
+      c == '%' &&
+      index + 2 < chars.length() &&
+      is_hex_digit(chars[index + 1]) &&
+      is_hex_digit(chars[index + 2]) {
+      out.push(c)
+      out.push(chars[index + 1])
+      out.push(chars[index + 2])
+      index = index + 2
     } else {
       append_utf8_encoded(out, c)
     }
+    index = index + 1
   }
   chars_to_string(out)
 }

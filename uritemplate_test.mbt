@@ -112,6 +112,16 @@ test "UTF-8 percent encoding" {
 }
 
 ///|
+test "reserved expansion preserves valid percent triplets" {
+  let values = Bindings::new().set_string("path", "/foo%2Fbar%20baz")
+  inspect(expand("{+path}", values), content="/foo%2Fbar%20baz")
+  inspect(expand("{#path}", values), content="#/foo%2Fbar%20baz")
+  inspect(expand("{path}", values), content="%2Ffoo%252Fbar%2520baz")
+  let invalid = Bindings::new().set_string("path", "%2G%")
+  inspect(expand("{+path}", invalid), content="%252G%25")
+}
+
+///|
 test "syntax errors are structured" {
   try expand("before{var", standard_bindings()) catch {
     UnclosedExpression(6) => ()
