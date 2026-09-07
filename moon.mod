@@ -1,0 +1,8 @@
+name = "your-github-id/uritemplate"
+version = "0.1.0"
+readme = "README.md"
+license = "Apache-2.0"
+repository = "https://github.com/your-github-id/uritemplate"
+keywords = ["uri", "url", "template", "rfc6570"]
+description = "RFC 6570 URI Template expansion for MoonBit"
+
