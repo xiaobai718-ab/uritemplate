@@ -47,14 +47,14 @@ test "build an API URL" {
 Add the package to a MoonBit project after it is published:
 
 ```console
-moon add your-github-id/uritemplate
+moon add xiaobai718-ab/uritemplate
 ```
 
 Then import it in `moon.pkg`:
 
 ```moonbit
 import {
-  "your-github-id/uritemplate",
+  "xiaobai718-ab/uritemplate",
 }
 ```
 
