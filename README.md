@@ -17,6 +17,7 @@ reproducible conformance tests.
 - UTF-8 percent encoding based on RFC 3986
 - Omission of undefined and empty composite values
 - Structured syntax errors
+- Reusable parsed templates for repeated expansion
 - No third-party runtime dependencies
 
 ## Example
@@ -72,6 +73,19 @@ let values = @uritemplate.Bindings::new()
 `expand(template, values)` returns the expanded string or raises an
 `ExpandError`. `encode(value, allow_reserved=false)` is also public for callers
 that need RFC 3986 component encoding directly.
+
+For a template used many times, parse and validate it once:
+
+```moonbit
+let template = @uritemplate.Template::parse("/users{/id}{?view}") catch {
+  _ => abort("invalid template")
+}
+let url = template.expand(
+  @uritemplate.Bindings::new()
+    .set_string("id", "42")
+    .set_string("view", "full"),
+)
+```
 
 ## Conformance scope
 

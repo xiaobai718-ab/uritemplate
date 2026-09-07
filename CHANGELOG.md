@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- Add a reusable `Template` API that parses and validates expressions once.
 - Preserve valid percent-encoded triplets during reserved and fragment
   expansion, as required by RFC 6570.
 

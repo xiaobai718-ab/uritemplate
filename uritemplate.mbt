@@ -72,6 +72,19 @@ priv struct VarSpec {
 }
 
 ///|
+priv enum TemplatePart {
+  Literal(String)
+  Expression(Operator, Array[VarSpec])
+}
+
+///|
+/// A parsed RFC 6570 template that can be expanded repeatedly.
+pub struct Template {
+  priv source : String
+  priv parts : Array[TemplatePart]
+}
+
+///|
 fn chars_to_string(chars : Array[Char]) -> String {
   let result : String = [..chars]
   result
@@ -458,10 +471,9 @@ fn split_varspecs(text : String) -> Array[String] {
 }
 
 ///|
-fn expand_expression(
+fn parse_expression(
   expression : String,
-  bindings : Bindings,
-) -> String raise ExpandError {
+) -> (Operator, Array[VarSpec]) raise ExpandError {
   let chars : Array[Char] = [..expression]
   if chars.length() == 0 {
     raise EmptyExpression(0)
@@ -473,9 +485,21 @@ fn expand_expression(
   if body == "" {
     raise EmptyExpression(0)
   }
-  let expanded : Array[String] = []
+  let specs : Array[VarSpec] = []
   for raw_spec in split_varspecs(body) {
-    let spec = parse_varspec(raw_spec)
+    specs.push(parse_varspec(raw_spec))
+  }
+  (op, specs)
+}
+
+///|
+fn expand_parsed_expression(
+  op : Operator,
+  specs : Array[VarSpec],
+  bindings : Bindings,
+) -> String {
+  let expanded : Array[String] = []
+  for spec in specs {
     match bindings.values.get(spec.name) {
       Some(value) =>
         for part in expand_value(spec, value, op) {
@@ -489,6 +513,74 @@ fn expand_expression(
   } else {
     op.prefix + join(expanded, op.separator)
   }
+}
+
+///|
+fn expand_expression(
+  expression : String,
+  bindings : Bindings,
+) -> String raise ExpandError {
+  let (op, specs) = parse_expression(expression)
+  expand_parsed_expression(op, specs, bindings)
+}
+
+///|
+/// Parse and validate a template once for repeated expansion.
+pub fn Template::parse(source : String) -> Template raise ExpandError {
+  let chars : Array[Char] = [..source]
+  let parts : Array[TemplatePart] = []
+  let literal : Array[Char] = []
+  let mut index = 0
+  while index < chars.length() {
+    if chars[index] != '{' {
+      literal.push(chars[index])
+      index = index + 1
+      continue
+    }
+    if literal.length() > 0 {
+      parts.push(Literal(chars_to_string(literal)))
+      literal.clear()
+    }
+    let opened_at = index
+    let mut close = index + 1
+    while close < chars.length() && chars[close] != '}' {
+      if chars[close] == '{' {
+        raise InvalidVariable(char_slice(chars, opened_at, close + 1))
+      }
+      close = close + 1
+    }
+    if close == chars.length() {
+      raise UnclosedExpression(opened_at)
+    }
+    let expression = char_slice(chars, index + 1, close)
+    let (op, specs) = parse_expression(expression)
+    parts.push(Expression(op, specs))
+    index = close + 1
+  }
+  if literal.length() > 0 {
+    parts.push(Literal(chars_to_string(literal)))
+  }
+  { source, parts, }
+}
+
+///|
+/// Return the original template text.
+pub fn Template::source(self : Template) -> String {
+  self.source
+}
+
+///|
+/// Expand a previously parsed template using the supplied bindings.
+pub fn Template::expand(self : Template, bindings : Bindings) -> String {
+  let out : Array[String] = []
+  for part in self.parts {
+    match part {
+      Literal(text) => out.push(text)
+      Expression(op, specs) =>
+        out.push(expand_parsed_expression(op, specs, bindings))
+    }
+  }
+  join(out, "")
 }
 
 ///|

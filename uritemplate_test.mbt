@@ -122,6 +122,40 @@ test "reserved expansion preserves valid percent triplets" {
 }
 
 ///|
+test "parsed template can be expanded repeatedly" {
+  let template = Template::parse("https://api.example.com{/owner,repo}{?page}")
+  inspect(
+    template.expand(
+      Bindings::new()
+      .set_string("owner", "moonbitlang")
+      .set_string("repo", "core")
+      .set_string("page", "1"),
+    ),
+    content="https://api.example.com/moonbitlang/core?page=1",
+  )
+  inspect(
+    template.expand(
+      Bindings::new().set_string("owner", "user").set_string("repo", "demo"),
+    ),
+    content="https://api.example.com/user/demo",
+  )
+  inspect(
+    template.source(),
+    content="https://api.example.com{/owner,repo}{?page}",
+  )
+}
+
+///|
+test "parsed template rejects malformed input immediately" {
+  try Template::parse("https://example.com/{var") catch {
+    UnclosedExpression(20) => ()
+    _ => fail("expected UnclosedExpression")
+  } noraise {
+    _ => fail("expected parsing to fail")
+  }
+}
+
+///|
 test "syntax errors are structured" {
   try expand("before{var", standard_bindings()) catch {
     UnclosedExpression(6) => ()
