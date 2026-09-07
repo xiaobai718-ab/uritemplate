@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-hackathon/uritemplate"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn encode(String, allow_reserved? : Bool) -> String
+
+pub fn expand(String, Bindings) -> String raise ExpandError
+
+// Errors
+pub suberror ExpandError {
+  UnclosedExpression(Int)
+  EmptyExpression(Int)
+  InvalidVariable(String)
+  InvalidModifier(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) struct Bindings {
+  values : Map[String, Value]
+}
+pub fn Bindings::new() -> Self
+pub fn Bindings::set_assoc(Self, String, Array[(String, String)]) -> Self
+pub fn Bindings::set_list(Self, String, Array[String]) -> Self
+pub fn Bindings::set_string(Self, String, String) -> Self
+
+pub(all) enum Value {
+  Scalar(String)
+  List(Array[String])
+  Assoc(Array[(String, String)])
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
