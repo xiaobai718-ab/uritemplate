@@ -1,6 +1,6 @@
 # Validation record
 
-Validated locally on 2026-09-07 with:
+Validated locally on 2026-09-09 with:
 
 ```text
 moon 0.1.20260827 (d0aaa07 2026-08-27)
@@ -12,10 +12,11 @@ moon 0.1.20260827 (d0aaa07 2026-08-27)
 | --- | --- |
 | `moon fmt --check` | passed |
 | `moon check` | passed |
-| `moon test` | 10 test groups passed, 0 failed |
+| `moon test` | 109 test groups passed, 0 failed |
 | `moon run cmd/main` | produced the expected GitHub API URL |
 | `moon info` | generated package interfaces |
-| library coverage | 194/214 expressions (90.7%) |
+| MoonBit source | 4,061 lines (2,604 implementation + 1,457 tests) |
+| library coverage | 1,062/1,117 expressions (95.1%) |
 
 Example output:
 

@@ -10,6 +10,6 @@ repository = "https://github.com/xiaobai718-ab/uritemplate"
 
 preferred_target = "wasm"
 
-keywords = [ "uri", "url", "template", "rfc6570" ]
+keywords = [ "uri", "url", "template", "rfc6570", "rfc3986" ]
 
-description = "RFC 6570 URI Template expansion for MoonBit"
+description = "RFC 6570 templates and RFC 3986 URI utilities for MoonBit"

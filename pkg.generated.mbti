@@ -8,9 +8,32 @@ import {
 // Values
 pub fn encode(String, allow_reserved? : Bool) -> String
 
+pub fn equivalent_uri(String, String) -> Bool raise UriError
+
 pub fn expand(String, Bindings) -> String raise ExpandError
 
+pub fn form_encode(String) -> String
+
+pub fn normalize_path(String) -> String
+
+pub fn normalize_uri(String) -> String raise UriError
+
+pub fn percent_decode(String, plus_as_space? : Bool) -> String raise PercentDecodeError
+
+pub fn resolve_uri(String, String) -> String raise UriError
+
 // Errors
+pub suberror BindingError {
+  MissingBindings(Array[String])
+} derive(Eq, @debug.Debug)
+
+pub suberror BuilderError {
+  EmptyScheme
+  EmptyHost
+  InvalidBuilderScheme(String)
+  InvalidBuilderPort(Int)
+} derive(Eq, @debug.Debug)
+
 pub suberror ExpandError {
   UnclosedExpression(Int)
   EmptyExpression(Int)
@@ -18,27 +41,231 @@ pub suberror ExpandError {
   InvalidModifier(String)
 } derive(Eq, @debug.Debug)
 
+pub suberror PercentDecodeError {
+  IncompleteEscape(Int)
+  InvalidEscape(Int, String)
+  InvalidUtf8
+} derive(Eq, @debug.Debug)
+
+pub suberror PolicyError {
+  InputTooLong(Int, Int)
+  RelativeReferenceForbidden
+  AuthorityRequired
+  SchemeForbidden(String)
+  UserinfoForbidden
+  FragmentForbidden
+  PortForbidden(Int)
+} derive(Eq, @debug.Debug)
+
+pub suberror QueryError {
+  InvalidKey(Int, PercentDecodeError)
+  InvalidValue(Int, PercentDecodeError)
+} derive(Eq, @debug.Debug)
+
+pub suberror RouteError {
+  RouteMustStartWithSlash(String)
+  EmptyRouteParameter(Int)
+  InvalidRouteParameter(String)
+  DuplicateRouteParameter(String)
+  CatchAllMustBeLast(String)
+  MissingRouteValue(String)
+} derive(Eq, @debug.Debug)
+
+pub suberror TemplateBuildError {
+  EmptyVariableName
+  InvalidBuilderVariable(String)
+  InvalidPrefixLength(Int)
+  ConflictingModifiers(String)
+  EmptyVariableList
+  BraceInLiteral(String)
+} derive(Eq, @debug.Debug)
+
+pub suberror UriError {
+  InvalidScheme(String)
+  InvalidAuthority(String)
+  InvalidPort(String)
+  RelativeBase(String)
+} derive(Eq, @debug.Debug)
+
 // Types and methods
+pub struct Authority {
+  // private fields
+} derive(Eq, @debug.Debug)
+pub fn Authority::host(Self) -> String
+pub fn Authority::port(Self) -> Int?
+pub fn Authority::to_string(Self) -> String
+pub fn Authority::userinfo(Self) -> String?
+
 pub(all) struct Bindings {
   values : Map[String, Value]
 }
+pub fn Bindings::contains(Self, String) -> Bool
+pub fn Bindings::length(Self) -> Int
 pub fn Bindings::new() -> Self
+pub fn Bindings::remove(Self, String) -> Self
 pub fn Bindings::set_assoc(Self, String, Array[(String, String)]) -> Self
 pub fn Bindings::set_list(Self, String, Array[String]) -> Self
 pub fn Bindings::set_string(Self, String, String) -> Self
+
+pub struct QueryParams {
+  // private fields
+}
+pub fn QueryParams::add(Self, String, String) -> Self
+pub fn QueryParams::append_to(Self, String) -> String
+pub fn QueryParams::contains(Self, String) -> Bool
+pub fn QueryParams::from_array(Array[(String, String)]) -> Self
+pub fn QueryParams::get(Self, String) -> String?
+pub fn QueryParams::get_all(Self, String) -> Array[String]
+pub fn QueryParams::is_empty(Self) -> Bool
+pub fn QueryParams::length(Self) -> Int
+pub fn QueryParams::new() -> Self
+pub fn QueryParams::parse(String, semicolon_separator? : Bool, plus_as_space? : Bool) -> Self raise QueryError
+pub fn QueryParams::remove(Self, String) -> Self
+pub fn QueryParams::set(Self, String, String) -> Self
+pub fn QueryParams::to_array(Self) -> Array[(String, String)]
+pub fn QueryParams::to_rfc3986(Self) -> String
+pub fn QueryParams::to_string(Self) -> String
+
+pub struct RouteMatch {
+  // private fields
+}
+pub fn RouteMatch::contains(Self, String) -> Bool
+pub fn RouteMatch::get(Self, String) -> String?
+pub fn RouteMatch::length(Self) -> Int
+
+pub struct RoutePattern {
+  // private fields
+}
+pub fn RoutePattern::match_path(Self, String) -> RouteMatch? raise PercentDecodeError
+pub fn RoutePattern::match_uri(Self, UriReference) -> RouteMatch? raise PercentDecodeError
+pub fn RoutePattern::parameter_names(Self) -> Array[String]
+pub fn RoutePattern::parse(String) -> Self raise RouteError
+pub fn RoutePattern::render(Self, Map[String, String]) -> String raise RouteError
+pub fn RoutePattern::source(Self) -> String
 
 pub struct Template {
   // private fields
 }
 pub fn Template::expand(Self, Bindings) -> String
+pub fn Template::expand_checked(Self, Bindings) -> String raise BindingError
+pub fn Template::missing_variables(Self, Bindings) -> Array[String]
 pub fn Template::parse(String) -> Self raise ExpandError
 pub fn Template::source(Self) -> String
+pub fn Template::variable_names(Self) -> Array[String]
+pub fn Template::variables(Self) -> Array[TemplateVariable]
+
+pub struct TemplateBuilder {
+  // private fields
+}
+pub fn TemplateBuilder::build(Self) -> Template raise ExpandError
+pub fn TemplateBuilder::expression(Self, TemplateOperator, Array[VariableRef]) -> Self raise TemplateBuildError
+pub fn TemplateBuilder::literal(Self, String) -> Self raise TemplateBuildError
+pub fn TemplateBuilder::new() -> Self
+pub fn TemplateBuilder::path(Self, Array[String]) -> Self raise TemplateBuildError
+pub fn TemplateBuilder::query(Self, Array[String]) -> Self raise TemplateBuildError
+pub fn TemplateBuilder::simple(Self, String) -> Self raise TemplateBuildError
+pub fn TemplateBuilder::source(Self) -> String
+
+pub(all) enum TemplateOperator {
+  Simple
+  Reserved
+  Fragment
+  Label
+  Path
+  Matrix
+  Query
+  Continuation
+} derive(Eq, @debug.Debug)
+
+pub struct TemplateVariable {
+  // private fields
+}
+pub fn TemplateVariable::explode(Self) -> Bool
+pub fn TemplateVariable::name(Self) -> String
+pub fn TemplateVariable::operator(Self) -> String
+pub fn TemplateVariable::prefix(Self) -> Int?
+
+pub struct UriBuilder {
+  // private fields
+}
+pub fn UriBuilder::add_query(Self, String, String) -> Self
+pub fn UriBuilder::build(Self) -> UriReference raise UriError
+pub fn UriBuilder::clear_fragment(Self) -> Self
+pub fn UriBuilder::clear_path(Self) -> Self
+pub fn UriBuilder::clear_port(Self) -> Self
+pub fn UriBuilder::clear_userinfo(Self) -> Self
+pub fn UriBuilder::fragment(Self, String) -> Self
+pub fn UriBuilder::new(String, String) -> Self raise BuilderError
+pub fn UriBuilder::pop_path(Self) -> String?
+pub fn UriBuilder::port(Self, Int) -> Self raise BuilderError
+pub fn UriBuilder::push_path(Self, String) -> Self
+pub fn UriBuilder::push_paths(Self, Array[String]) -> Self
+pub fn UriBuilder::remove_query(Self, String) -> Self
+pub fn UriBuilder::set_query(Self, String, String) -> Self
+pub fn UriBuilder::to_string(Self) -> String
+pub fn UriBuilder::trailing_slash(Self, Bool) -> Self
+pub fn UriBuilder::userinfo(Self, String) -> Self
+
+pub struct UriPolicy {
+  // private fields
+}
+pub fn UriPolicy::authority(Self, Bool) -> Self
+pub fn UriPolicy::fragment(Self, Bool) -> Self
+pub fn UriPolicy::max_length(Self, Int) -> Self
+pub fn UriPolicy::permissive() -> Self
+pub fn UriPolicy::ports(Self, Array[Int]) -> Self
+pub fn UriPolicy::relative(Self, Bool) -> Self
+pub fn UriPolicy::schemes(Self, Array[String]) -> Self
+pub fn UriPolicy::userinfo(Self, Bool) -> Self
+pub fn UriPolicy::validate(Self, UriReference) -> Unit raise PolicyError
+pub fn UriPolicy::web() -> Self
+
+pub struct UriReference {
+  // private fields
+} derive(Eq, @debug.Debug)
+pub fn UriReference::append_path_segment(Self, String) -> Self
+pub fn UriReference::authority(Self) -> Authority?
+pub fn UriReference::decoded_path_segments(Self) -> Array[String] raise PercentDecodeError
+pub fn UriReference::effective_port(Self) -> Int?
+pub fn UriReference::extension(Self) -> String?
+pub fn UriReference::filename(Self) -> String?
+pub fn UriReference::fragment(Self) -> String?
+pub fn UriReference::has_authority(Self) -> Bool
+pub fn UriReference::is_absolute(Self) -> Bool
+pub fn UriReference::is_secure_transport(Self) -> Bool
+pub fn UriReference::normalize(Self) -> Self
+pub fn UriReference::origin(Self) -> (String, String, Int?)?
+pub fn UriReference::parent(Self) -> Self
+pub fn UriReference::parse(String) -> Self raise UriError
+pub fn UriReference::path(Self) -> String
+pub fn UriReference::path_segments(Self) -> Array[String]
+pub fn UriReference::query(Self) -> String?
+pub fn UriReference::query_params(Self) -> QueryParams raise QueryError
+pub fn UriReference::resolve(Self, Self) -> Self raise UriError
+pub fn UriReference::same_origin(Self, Self) -> Bool
+pub fn UriReference::scheme(Self) -> String?
+pub fn UriReference::to_string(Self) -> String
+pub fn UriReference::with_fragment(Self, String?) -> Self
+pub fn UriReference::with_path(Self, String) -> Self
+pub fn UriReference::with_query(Self, String?) -> Self
+pub fn UriReference::with_query_params(Self, QueryParams) -> Self
+pub fn UriReference::without_fragment(Self) -> Self
 
 pub(all) enum Value {
   Scalar(String)
   List(Array[String])
   Assoc(Array[(String, String)])
 } derive(Eq, @debug.Debug)
+
+pub struct VariableRef {
+  // private fields
+}
+pub fn VariableRef::explode(Self) -> Self raise TemplateBuildError
+pub fn VariableRef::is_exploded(Self) -> Bool
+pub fn VariableRef::name(Self) -> String
+pub fn VariableRef::new(String) -> Self raise TemplateBuildError
+pub fn VariableRef::prefix(Self, Int) -> Self raise TemplateBuildError
+pub fn VariableRef::prefix_length(Self) -> Int?
 
 // Type aliases
 
