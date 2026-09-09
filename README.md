@@ -116,6 +116,27 @@ let url = @uritemplate.UriBuilder::new("https", "api.example.com")
 Additional public APIs include `QueryParams`, `RoutePattern`, `UriPolicy`,
 `TemplateBuilder`, `percent_decode`, `normalize_uri`, and `equivalent_uri`.
 
+## Project structure
+
+MoonBit treats the files in the repository root as one library package. Each
+implementation module has a neighboring `_test.mbt` file so its behavior is
+easy to locate and review.
+
+| Area | Implementation | Tests |
+| --- | --- | --- |
+| URI Template expansion | `uritemplate.mbt` | `uritemplate_test.mbt`, `rfc6570_conformance_test.mbt` |
+| Template inspection and construction | `template_tools.mbt`, `template_builder.mbt` | matching `_test.mbt` files |
+| URI parsing and components | `uri.mbt`, `components.mbt` | matching `_test.mbt` files |
+| URI normalization and policy | `normalize.mbt`, `policy.mbt` | matching `_test.mbt` files |
+| Encoding and query parameters | `percent.mbt`, `query.mbt` | matching `_test.mbt` files |
+| URI and route construction | `builder.mbt`, `route.mbt` | matching `_test.mbt` files |
+| Runnable example | `cmd/main/` | exercised by `moon run cmd/main` |
+| Automation and project metadata | `.github/workflows/`, `moon.mod`, `moon.pkg` | CI and package configuration |
+
+Supporting documents are kept at the root so GitHub and package registries can
+discover them directly: `CHANGELOG.md`, `CONTRIBUTING.md`, `VALIDATION.md`,
+`ROADMAP.md`, and `LICENSE`.
+
 ## Conformance scope
 
 The implementation covers the RFC 6570 expansion levels and operators used by
@@ -149,5 +170,4 @@ This is an original MoonBit implementation based on the behavior specified by
 Apache-2.0 [URI Template test suite](https://github.com/uri-templates/uritemplate-test)
 are used as interoperability vectors. The source code is licensed under Apache-2.0.
 
-See [PROJECT_PROPOSAL.md](PROJECT_PROPOSAL.md) for the hackathon scope and
-acceptance plan.
+See [ROADMAP.md](ROADMAP.md) for completed milestones and planned releases.
